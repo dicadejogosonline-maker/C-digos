@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 Shazam Tutorial | Kraft Land FF</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#121212;color:#fff;padding:10px}
+.container{max-width:480px;margin:auto}
+
+/* CABEÇALHO */
+.header{text-align:center;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #333}
+.header h1{font-size:24px;color:#ffcc00}
+.subtitulo{font-size:13px;color:#aaa;margin-top:4px}
+
+/* CARD */
+.cartao{background:#1e1e1e;border-radius:10px;margin:12px 0;border:1px solid #333}
+.cartao-topo{display:flex;gap:10px;padding:10px}
+.cartao img{width:110px;height:85px;border-radius:6px;object-fit:cover}
+.info{flex:1}
+.titulo{color:#ffcc00;font-size:16px;font-weight:bold;margin-bottom:5px}
+.descricao{color:#ddd;font-size:13px;line-height:1.4}
+
+/* VÍDEO */
+.video{margin:8px;border-radius:6px;overflow:hidden}
+.video iframe{width:100%;height:180px;border:0}
+
+/* BLOQUEADO */
+.aviso-bloqueado{color:#ff4444;font-size:13px;padding:8px 10px;border-top:1px solid #333}
+.codigo-oculto{background:#252525;margin:8px;padding:10px;text-align:center;border-radius:4px;color:#666;letter-spacing:3px}
+.campo{display:flex;gap:6px;margin:0 8px 10px}
+.campo input{flex:1;background:#252525;border:1px solid #444;color:#fff;padding:7px;border-radius:4px;outline:none}
+.campo button{background:#ffcc00;color:#000;border:none;padding:7px 10px;border-radius:4px;font-weight:bold;cursor:pointer;font-size:13px}
+
+/* LIBERADO */
+.area-liberado{background:#1f2e25;border:1px solid #00c853;margin:8px;padding:10px;border-radius:6px}
+.aviso-liberado{color:#00c853;font-size:13px;font-weight:bold;margin-bottom:8px}
+.codigo-exibido{background:#1a1a1a;padding:9px;border-radius:4px;margin-bottom:8px;word-break:break-all;font-size:14px}
+.btn-copiar{width:100%;background:#ffcc00;color:#000;border:none;padding:8px;border-radius:4px;font-weight:bold;cursor:pointer}
+
+/* AVISOS */
+.msg{position:fixed;top:15px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:6px;color:#fff;font-weight:bold;z-index:999;display:none}
+.msg.ok{background:#00c853}
+.msg.erro{background:#ff4444}
+</style>
+</head>
+<body>
+
+<div class="msg ok" id="msgOk">✅ Liberado!</div>
+<div class="msg erro" id="msgErro">❌ Código incorreto</div>
+
+<div class="container">
+  <div class="header">
+    <h1>🔥 Shazam | Kraft Land FF</h1>
+    <p class="subtitulo">Digite o código do Discord para liberar</p>
+  </div>
+
+  <div id="lista"></div>
+</div>
+
+<script>
+// ✅ PLANILHA CORRETA
+const ID_PLANILHA = "1qVFFrI8lmNO1BFKjVzun0c1k_iBXeT5-8ooxPkSxUG4";
+const ABA = "Página1";
+
+// Carrega dados da planilha
+fetch(`https://opensheet.elk.sh/${ID_PLANILHA}/${ABA}`)
+.then(res => res.json())
+.then(dados => {
+  const liberados = JSON.parse(localStorage.getItem("libShazam") || "{}");
+  let html = "";
+
+  dados.forEach((linha, i) => {
+    if(!linha.nome) return;
+
+    const id = `item_${i}`;
+    const codItem = linha.codigo?.trim() || "";
+    const codLib = linha.codigo_liberacao?.trim() || "";
+    const liberado = liberados[id] === true;
+
+    // Imagem
+    const img = linha.url ? `<img src="${linha.url.trim()}" alt="Imagem">` : "";
+
+    // Vídeo YouTube
+    let vid = "";
+    if(linha.video_url) {
+      let v = linha.video_url;
+      let vidId = v.includes("v=") ? v.split("v=")[1].split("&")[0] : v.split("/").pop();
+      vid = `<div class="video"><iframe src="https://youtube.com/embed/${vidId}" allowfullscreen loading="lazy"></iframe></div>`;
+    }
+
+    // Área do código: bloqueado ou liberado
+    let blocoCod;
+    if(liberado) {
+      blocoCod = `
+      <div class="area-liberado">
+        <div class="aviso-liberado">✅ LIBERADO</div>
+        <div class="codigo-exibido" id="cod${i}">${codItem}</div>
+        <button class="btn-copiar" onclick="copiar('cod${i}')">📋 COPIAR</button>
+      </div>`;
+    } else {
+      blocoCod = `
+      <div class="aviso-bloqueado">🔒 Digite o código de liberação</div>
+      <div class="codigo-oculto">••••••••••••</div>
+      <div class="campo">
+        <input type="text" id="inp${i}" placeholder="Código">
+        <button onclick="verificar('${id}','${codLib}',${i})">LIBERAR</button>
+      </div>`;
+    }
+
+    html += `
+    <div class="cartao">
+      <div class="cartao-topo">
+        ${img}
+        <div class="info">
+          <h3 class="titulo">${linha.nome.trim()}</h3>
+          <p class="descricao">${linha.descricao?.trim() || ""}</p>
+        </div>
+      </div>
+      ${vid}
+      ${blocoCod}
+    </div>`;
+  });
+
+  document.getElementById("lista").innerHTML = html || "<p style='text-align:center;color:#888;padding:20px;'>Nenhum item cadastrado</p>";
+})
+.catch(() => {
+  document.getElementById("lista").innerHTML = "<p style='text-align:center;color:red;padding:20px;'>Erro ao carregar dados. Verifique permissões.</p>";
+});
+
+// Verifica se o código está correto
+function verificar(idItem, codCorreto, indice) {
+  const digitado = document.getElementById(`inp${indice}`).value.trim();
+  if(digitado === codCorreto && codCorreto) {
+    const lib = JSON.parse(localStorage.getItem("libShazam") || "{}");
+    lib[idItem] = true;
+    localStorage.setItem("libShazam", JSON.stringify(lib));
+    document.getElementById("msgOk").style.display = "block";
+    setTimeout(() => location.reload(), 800);
+  } else {
+    document.getElementById("msgErro").style.display = "block";
+    setTimeout(() => document.getElementById("msgErro").style.display = "none", 2000);
+  }
+}
+
+// Copiar código
+function copiar(id) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText);
+  const m = document.getElementById("msgOk");
+  m.textContent = "✅ Código copiado!";
+  m.style.display = "block";
+  setTimeout(() => {
+    m.style.display = "none";
+    m.textContent = "✅ Liberado!";
+  }, 1800);
+}
+</script>
+
+</body>
+</html>
